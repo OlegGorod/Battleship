@@ -1,20 +1,21 @@
 window.addEventListener('DOMContentLoaded', () => {
 
     class Model {
-        
+        constructor(shipsSunk) {
+            this.shipsSunk = shipsSunk;
+            shipsSunk = 0;
+        }
         ships = [
-            { locations: ['00', '01', '02'], hits: ['', '', ''] },
-            { locations: ['20', '21', '22'], hits: ['', '', ''] },
-            { locations: ['45', '46', '47'], hits: ['', '', ''] }
+            { locations: [0, 0, 0], hits: ['', '', ''] },
+            { locations: [0, 0, 0], hits: ['', '', ''] },
+            { locations: [0, 0, 0], hits: ['', '', ''] }
         ]
         boardSize = 7;
         numShips = 3;
         shipLength = 3;
-        shipsSunk = 0;
-        
-        
+
+
         generateShip() {
-            console.log(this.boardSize)
             const direction = Math.floor(Math.random() * 2);
             let row;
             let col;
@@ -27,7 +28,39 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             let newShipLocations = [];
 
+            for (let i = 0; i < this.shipLength; i++) {
+                if (direction === 1) {
+                    newShipLocations.push(`${row}${col + i}`)
+                }
+                else {
+                    newShipLocations.push(`${row + i}${col}`)
+                }
+            }
+            return newShipLocations;
         }
+
+        generateShipLocations() {
+            let locations;
+            for (let i = 0; i < this.numShips; i++) {
+                do {
+                    locations = this.generateShip();
+                } while (this.collision(locations));
+                this.ships[i].locations = locations;
+            }
+            console.log(this.ships)
+        }
+
+        collision(locations) {
+            for (let i = 0; i < this.numShips; i++) {
+                let ship = this.ships[i];
+                for (let j = 0; j < locations.length; j++) {
+                    if (ship.locations.indexOf(locations[j]) >= 0) {
+                        return true;
+                    }
+                }
+            } return false;
+        }
+
 
         fire(guess) {
             for (let i = 0; i < this.ships.length; i++) {
@@ -38,6 +71,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     ship.hits[index] = 'hit';
                     view.displayHit(guess);
                     view.displayMessage('HIT');
+
                     if (this.isSunk(ship)) {
                         view.displayMessage('You sank my ship');
                         this.shipsSunk++;
@@ -45,14 +79,14 @@ window.addEventListener('DOMContentLoaded', () => {
                     return true;
                 }
             }
-            view.displayMessage('You missed');
             view.displayMiss(guess)
+            view.displayMessage('You missed');
             return false
         };
 
         isSunk(ship) {
             for (let i = 0; i < this.shipLength; i++) {
-                if (ship.hits !== 'hit') {
+                if (ship.hits[i] !== 'hit') {
                     return false
                 }
                 return true
@@ -62,10 +96,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    class Controller {
-        constructor(guess) {
-            this.guess = guess;
-        }
+    class Controller extends Model {
         shots = 0;
 
         processGuess(guess) {
@@ -119,7 +150,7 @@ window.addEventListener('DOMContentLoaded', () => {
     function handleFireButton() {
         const input = document.querySelector('#guessInput');
         let value = input.value;
-        console.log(value);
+        controller.processGuess(value);
         input.value = '';
     }
 
@@ -143,16 +174,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const play = new Model();
     const view = new View();
-    const div = new Controller('A0');
-    // play.generateShip();
-    div.processGuess('E5')
-    div.processGuess('E3')
-    div.processGuess('E2')
-    div.processGuess('E1')
-    div.processGuess('E0')
-    div.processGuess('E6')
-    div.processGuess('E7')
-    div.processGuess('D0')
+    const controller = new Controller();
+
+    play.generateShipLocations();
 
 });
 
